@@ -99,6 +99,22 @@ class ViewController: UIViewController {
         motionManager.stopAccelerometerUpdates()
         motionManager.stopGyroUpdates()
     }
-
+    
+    @IBAction func onBackPocket(_ sender: Any) {
+        print("*** putting in back pocket ***")
+    }
+    
+    @IBAction func onTurnAway(_ sender: Any) {
+        print("*** turning away ***")
+    }
+    
+    @IBAction func onWalkAway(_ sender: Any) {
+        print("*** walking away ***")
+    }
+    
+    @IBAction func upload(_ sender: Any) {
+        print("uploading log")
+    }
+    
 }
 
