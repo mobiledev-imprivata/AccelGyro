@@ -49,14 +49,14 @@ class ViewController: UIViewController {
         motionManager.startAccelerometerUpdates(to: OperationQueue.current!) {
             [unowned self] data, error in
             guard error == nil else {
-                print("accel error")
+                Logger.sharedInstance.log("accel error")
                 return
             }
             guard let data = data else {
-                print("accel data is nil")
+                Logger.sharedInstance.log("accel data is nil")
                 return
             }
-            print("accel: \(data)")
+            Logger.sharedInstance.log("accel: \(data)")
             if fabs(data.acceleration.x) > fabs(self.accelMaxX) {
                 self.accelMaxX = data.acceleration.x
             }
@@ -66,7 +66,7 @@ class ViewController: UIViewController {
             if fabs(data.acceleration.z) > fabs(self.accelMaxZ) {
                 self.accelMaxZ = data.acceleration.z
             }
-            print("accelMaxX \(self.accelMaxX), accelMaxY \(self.accelMaxY), accelMaxZ \(self.accelMaxZ)")
+            Logger.sharedInstance.log("accelMaxX \(self.accelMaxX), accelMaxY \(self.accelMaxY), accelMaxZ \(self.accelMaxZ)")
         }
     }
     
@@ -74,14 +74,14 @@ class ViewController: UIViewController {
         motionManager.startGyroUpdates(to: OperationQueue.current!) {
             [unowned self] data, error in
             guard error == nil else {
-                print("gyro error")
+                Logger.sharedInstance.log("gyro error")
                 return
             }
             guard let data = data else {
-                print("gyro data is nil")
+                Logger.sharedInstance.log("gyro data is nil")
                 return
             }
-            print("gyro:  \(data)")
+            Logger.sharedInstance.log("gyro:  \(data)")
             if fabs(data.rotationRate.x) > fabs(self.gyroMaxX) {
                 self.gyroMaxX = data.rotationRate.x
             }
@@ -91,7 +91,7 @@ class ViewController: UIViewController {
             if fabs(data.rotationRate.z) > fabs(self.gyroMaxZ) {
                 self.gyroMaxZ = data.rotationRate.z
             }
-            print("gyroMaxX \(self.gyroMaxX), gyroMaxY \(self.gyroMaxY), gyroMaxZ \(self.gyroMaxZ)")
+            Logger.sharedInstance.log("gyroMaxX \(self.gyroMaxX), gyroMaxY \(self.gyroMaxY), gyroMaxZ \(self.gyroMaxZ)")
         }
     }
     
@@ -101,19 +101,19 @@ class ViewController: UIViewController {
     }
     
     @IBAction func onBackPocket(_ sender: Any) {
-        print("*** putting in back pocket ***")
+        Logger.sharedInstance.log("*** putting in back pocket ***")
     }
     
     @IBAction func onTurnAway(_ sender: Any) {
-        print("*** turning away ***")
+        Logger.sharedInstance.log("*** turning away ***")
     }
     
     @IBAction func onWalkAway(_ sender: Any) {
-        print("*** walking away ***")
+        Logger.sharedInstance.log("*** walking away ***")
     }
     
     @IBAction func upload(_ sender: Any) {
-        print("uploading log")
+        Logger.sharedInstance.log("uploading log")
     }
     
 }
