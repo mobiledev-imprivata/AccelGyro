@@ -25,8 +25,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        motionManager.accelerometerUpdateInterval = 0.25
-        motionManager.gyroUpdateInterval = 0.25
+        motionManager.accelerometerUpdateInterval = 1.0
+        motionManager.gyroUpdateInterval = 1.0
     }
 
     override func didReceiveMemoryWarning() {
@@ -114,6 +114,7 @@ class ViewController: UIViewController {
     
     @IBAction func upload(_ sender: Any) {
         Logger.sharedInstance.log("uploading log")
+        Logger.sharedInstance.upload()
     }
     
 }
