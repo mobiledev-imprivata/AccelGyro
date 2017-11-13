@@ -73,6 +73,7 @@ public final class Logger {
             
             // flush any remaining messages in the message buffer,
             // then close the file
+            self.isLogging = false
             self.writeBufferToFile()
             self.closeFile()
             self.uploadFileToServer()
