@@ -11,24 +11,33 @@ import CoreMotion
 
 class ViewController: UIViewController {
     
+    @IBOutlet weak var startButton: UIButton!
+    @IBOutlet weak var stopButton: UIButton!
+    @IBOutlet weak var uploadButton: UIButton!
+    @IBOutlet weak var deleteButton: UIButton!
+    
     var motionManager = CMMotionManager()
     
     var accelMaxX = 0.0
     var accelMaxY = 0.0
     var accelMaxZ = 0.0
-
+    
     var gyroMaxX = 0.0
     var gyroMaxY = 0.0
     var gyroMaxZ = 0.0
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        stopButton.isEnabled = false
+        uploadButton.isEnabled = false
+        deleteButton.isEnabled = false
+        
         motionManager.accelerometerUpdateInterval = 1.0
         motionManager.gyroUpdateInterval = 1.0
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -36,7 +45,7 @@ class ViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
+        
         startAccelerometerUpdates()
         startGyroUpdates()
     }
@@ -112,9 +121,40 @@ class ViewController: UIViewController {
         Logger.sharedInstance.log("*** walking away ***")
     }
     
-    @IBAction func upload(_ sender: Any) {
-        Logger.sharedInstance.log("uploading log")
+    // MARK: log file interaction
+    
+    @IBAction func startLog(_ sender: Any) {
+        Logger.sharedInstance.start()
+        
+        startButton.isEnabled = false
+        stopButton.isEnabled = true
+        uploadButton.isEnabled = true
+        deleteButton.isEnabled = true
+    }
+    
+    @IBAction func stopLog(_ sender: Any) {
+        Logger.sharedInstance.stop()
+        
+        startButton.isEnabled = true
+        stopButton.isEnabled = false
+    }
+    
+    @IBAction func uploadLog(_ sender: Any) {
         Logger.sharedInstance.upload()
+        
+        startButton.isEnabled = true
+        stopButton.isEnabled = false
+        uploadButton.isEnabled = false
+        deleteButton.isEnabled = false
+    }
+    
+    @IBAction func deleteLog(_ sender: Any) {
+        Logger.sharedInstance.delete()
+        
+        startButton.isEnabled = true
+        stopButton.isEnabled = false
+        uploadButton.isEnabled = false
+        deleteButton.isEnabled = false
     }
     
 }

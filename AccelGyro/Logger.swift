@@ -9,6 +9,8 @@
 import Foundation
 
 public final class Logger {
+    private var isLogging = false
+    
     private var logFilePath: String?
     private var outputStream: OutputStream?
     
@@ -24,11 +26,11 @@ public final class Logger {
     
     private init() {
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        openFile()
     }
     
     deinit {
         closeFile()
+        deleteFile()
     }
     
     func log(_ message: String) {
@@ -36,6 +38,9 @@ public final class Logger {
             let dateString = self.dateFormatter.string(from: Date())
             let logString = "\(dateString) \(message)"
             print(logString)
+            
+            guard self.isLogging else { return }
+            
             self.messageBuffer.append(logString)
             // print("messageBuffer \(self.messageBuffer.count)")
             if self.messageBuffer.count >= self.messageBufferMaxSize {
@@ -44,19 +49,45 @@ public final class Logger {
         }
     }
     
+    func start() {
+        print(#function)
+        loggerQueue.async { [unowned self] in
+            self.isLogging = true
+            if self.logFilePath == nil {
+                self.openFile()
+            }
+        }
+    }
+    
+    func stop() {
+        print(#function)
+        loggerQueue.async { [unowned self] in
+            self.isLogging = false
+        }
+    }
+    
     func upload() {
         print(#function)
         loggerQueue.async { [unowned self] in
+            guard self.logFilePath != nil else { return }
+            
             // flush any remaining messages in the message buffer,
             // then close the file
             self.writeBufferToFile()
             self.closeFile()
             self.uploadFileToServer()
             self.deleteFile()
-            self.openFile()
         }
     }
-    
+
+    func delete() {
+        print(#function)
+        loggerQueue.async { [unowned self] in
+            self.deleteFile()
+            self.messageBuffer.removeAll()
+        }
+    }
+
     // MARK: OutputStream/file code
     
     private func openFile() {
@@ -68,7 +99,7 @@ public final class Logger {
             dt.dateFormat = "yyyyMMdd'T'HH-mm-ss"
             let dateString = dt.string(from: Date())
             logFilePath = "\(path)/AccelGyro-\(dateString).log"
-            print("logFilePath \(logFilePath!)")
+            print("opening logFilePath \(logFilePath!)")
             outputStream = OutputStream(toFileAtPath: logFilePath!, append: false)
             outputStream?.open()
         }
@@ -90,6 +121,7 @@ public final class Logger {
                 print("delete \(logFilePath) failed: \(error.localizedDescription)")
             }
         }
+        self.logFilePath = nil
     }
     
     private func writeBufferToFile() {
@@ -126,13 +158,14 @@ public final class Logger {
             return
         }
 
-       // bodyString.characters
+        print("body character count: \(bodyString.count)")
+
+        guard let bodyData = bodyString.data(using: .utf8) else {
+            print("error converting body string to data")
+            return
+        }
         
-        
-//        let bodyStr = "\r\n--\(boundary)\r\n" + head + fileStr + "\r\n--\(boundary)--\r\n"
-//        let loadData = bodyStr.data(using: .utf8)
-//        let loadStr = String(data: loadData! , encoding: .utf8)
-//        dataToUpload.append(loadData!)
+        print("body data count: \(bodyData.count)")
     }
     
 }

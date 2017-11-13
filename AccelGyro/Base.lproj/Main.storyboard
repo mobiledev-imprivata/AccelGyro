@@ -34,14 +34,6 @@
                                     <action selector="onTurnAway:" destination="BYZ-38-t0r" eventType="touchUpInside" id="QkF-OO-dOa"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QCN-I5-4gk">
-                                <rect key="frame" x="137" y="596" width="100" height="51"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="32"/>
-                                <state key="normal" title="Upload"/>
-                                <connections>
-                                    <action selector="upload:" destination="BYZ-38-t0r" eventType="touchUpInside" id="rAX-qo-ARF"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GXT-Bl-1eI">
                                 <rect key="frame" x="114" y="152" width="146" height="51"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="32"/>
@@ -50,20 +42,72 @@
                                     <action selector="onWalkAway:" destination="BYZ-38-t0r" eventType="touchUpInside" id="0em-bo-BTq"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eTA-Bw-lNI">
+                                <rect key="frame" x="154" y="443" width="66" height="51"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="32"/>
+                                <state key="normal" title="Start"/>
+                                <connections>
+                                    <action selector="startLog:" destination="BYZ-38-t0r" eventType="touchUpInside" id="mxK-oH-Jsh"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jJy-N5-n1q">
+                                <rect key="frame" x="155" y="494" width="65" height="51"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="32"/>
+                                <state key="normal" title="Stop"/>
+                                <connections>
+                                    <action selector="stopLog:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Dph-me-v5w"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QCN-I5-4gk">
+                                <rect key="frame" x="137" y="545" width="100" height="51"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="32"/>
+                                <state key="normal" title="Upload"/>
+                                <connections>
+                                    <action selector="uploadLog:" destination="BYZ-38-t0r" eventType="touchUpInside" id="T0i-Af-G2A"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9Oc-gu-BO2">
+                                <rect key="frame" x="143" y="596" width="89" height="51"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="32"/>
+                                <state key="normal" title="Delete"/>
+                                <connections>
+                                    <action selector="deleteLog:" destination="BYZ-38-t0r" eventType="touchUpInside" id="X0I-gR-U74"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Log" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rmt-dq-TzD">
+                                <rect key="frame" x="162" y="384.5" width="52" height="38.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="32"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="eJc-h0-zue" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="14" id="2zK-TD-xhE"/>
+                            <constraint firstItem="jJy-N5-n1q" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="3vE-ug-6nT"/>
+                            <constraint firstItem="eTA-Bw-lNI" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="7TF-Fj-WFd"/>
+                            <constraint firstItem="9Oc-gu-BO2" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Ehw-bF-5nV"/>
                             <constraint firstItem="GXT-Bl-1eI" firstAttribute="top" secondItem="DXc-sC-ZHy" secondAttribute="bottom" constant="8" id="KHl-bV-Wzq"/>
+                            <constraint firstItem="eTA-Bw-lNI" firstAttribute="top" secondItem="rmt-dq-TzD" secondAttribute="bottom" constant="20" id="U8g-zF-t1X"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="9Oc-gu-BO2" secondAttribute="bottom" constant="20" id="UY9-Nl-5bh"/>
                             <constraint firstItem="GXT-Bl-1eI" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Upb-7n-e8m"/>
+                            <constraint firstItem="jJy-N5-n1q" firstAttribute="top" secondItem="eTA-Bw-lNI" secondAttribute="bottom" id="YrA-Iw-tCY"/>
                             <constraint firstItem="DXc-sC-ZHy" firstAttribute="top" secondItem="eJc-h0-zue" secondAttribute="bottom" constant="8" id="ZBj-8O-amr"/>
+                            <constraint firstItem="9Oc-gu-BO2" firstAttribute="top" secondItem="QCN-I5-4gk" secondAttribute="bottom" id="bY7-oC-Hj5"/>
                             <constraint firstItem="QCN-I5-4gk" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="ekL-AM-9J9"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="QCN-I5-4gk" secondAttribute="bottom" constant="20" id="f6j-cP-Ygq"/>
+                            <constraint firstItem="rmt-dq-TzD" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="g1z-DP-0tI"/>
+                            <constraint firstItem="QCN-I5-4gk" firstAttribute="top" secondItem="jJy-N5-n1q" secondAttribute="bottom" id="jkM-t1-VYJ"/>
                             <constraint firstItem="DXc-sC-ZHy" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="mvt-Lr-aT5"/>
                             <constraint firstItem="eJc-h0-zue" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="y0P-2W-QJc"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <connections>
+                        <outlet property="deleteButton" destination="9Oc-gu-BO2" id="0ML-Ic-obK"/>
+                        <outlet property="startButton" destination="eTA-Bw-lNI" id="Rff-nr-8Pz"/>
+                        <outlet property="stopButton" destination="jJy-N5-n1q" id="zfs-Dt-3eX"/>
+                        <outlet property="uploadButton" destination="QCN-I5-4gk" id="ney-Xj-7rU"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
