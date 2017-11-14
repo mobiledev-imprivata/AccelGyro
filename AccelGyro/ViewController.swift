@@ -18,14 +18,6 @@ class ViewController: UIViewController {
     
     var motionManager = CMMotionManager()
     
-    var accelMaxX = 0.0
-    var accelMaxY = 0.0
-    var accelMaxZ = 0.0
-    
-    var gyroMaxX = 0.0
-    var gyroMaxY = 0.0
-    var gyroMaxZ = 0.0
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -55,8 +47,7 @@ class ViewController: UIViewController {
     }
     
     private func startAccelerometerUpdates() {
-        motionManager.startAccelerometerUpdates(to: OperationQueue.current!) {
-            [unowned self] data, error in
+        motionManager.startAccelerometerUpdates(to: OperationQueue.current!) { data, error in
             guard error == nil else {
                 Logger.sharedInstance.log("accel error")
                 return
@@ -66,22 +57,11 @@ class ViewController: UIViewController {
                 return
             }
             Logger.sharedInstance.log("accel: \(data)")
-            if fabs(data.acceleration.x) > fabs(self.accelMaxX) {
-                self.accelMaxX = data.acceleration.x
-            }
-            if fabs(data.acceleration.y) > fabs(self.accelMaxY) {
-                self.accelMaxY = data.acceleration.y
-            }
-            if fabs(data.acceleration.z) > fabs(self.accelMaxZ) {
-                self.accelMaxZ = data.acceleration.z
-            }
-            Logger.sharedInstance.log("accelMaxX \(self.accelMaxX), accelMaxY \(self.accelMaxY), accelMaxZ \(self.accelMaxZ)")
         }
     }
     
     private func startGyroUpdates() {
-        motionManager.startGyroUpdates(to: OperationQueue.current!) {
-            [unowned self] data, error in
+        motionManager.startGyroUpdates(to: OperationQueue.current!) { data, error in
             guard error == nil else {
                 Logger.sharedInstance.log("gyro error")
                 return
@@ -91,16 +71,6 @@ class ViewController: UIViewController {
                 return
             }
             Logger.sharedInstance.log("gyro:  \(data)")
-            if fabs(data.rotationRate.x) > fabs(self.gyroMaxX) {
-                self.gyroMaxX = data.rotationRate.x
-            }
-            if fabs(data.rotationRate.y) > fabs(self.gyroMaxY) {
-                self.gyroMaxY = data.rotationRate.y
-            }
-            if fabs(data.rotationRate.z) > fabs(self.gyroMaxZ) {
-                self.gyroMaxZ = data.rotationRate.z
-            }
-            Logger.sharedInstance.log("gyroMaxX \(self.gyroMaxX), gyroMaxY \(self.gyroMaxY), gyroMaxZ \(self.gyroMaxZ)")
         }
     }
     
