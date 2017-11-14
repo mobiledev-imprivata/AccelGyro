@@ -17,7 +17,8 @@ public final class Logger {
     private var messageBuffer = [String]()
     private let messageBufferMaxSize = 10
 
-    private let loggerQueue = DispatchQueue(label: "loggerQueue", attributes: [])
+    private let loggerQueue = DispatchQueue(label: "com.imprivata.log", attributes: [])
+    private let uploadQueue = DispatchQueue(label: "com.imprivata.upload", attributes: [])
 
     private let dateFormatter = DateFormatter()
 
@@ -128,7 +129,7 @@ public final class Logger {
     private func writeBufferToFile() {
         print(#function)
         if let outputStream = outputStream {
-            let s = messageBuffer.reduce("") { $0 + $1 + "\n" }
+            let s = messageBuffer.reduce("") { $0 + $1 + "\\n" }
             let nBytesWritten = outputStream.write(s, maxLength: s.lengthOfBytes(using: String.Encoding.utf8))
             if nBytesWritten != -1 {
                 messageBuffer.removeAll(keepingCapacity: true)
@@ -146,27 +147,56 @@ public final class Logger {
         
         guard let logFilePath = logFilePath else { return }
 
-        var bodyString: String
+        var contentString: String
         do {
-            bodyString = try String(contentsOfFile: logFilePath, encoding: .utf8)
+            contentString = try String(contentsOfFile: logFilePath, encoding: .utf8)
         } catch  let error as NSError {
             print("Failed reading from \(logFilePath), Error: \(error.localizedDescription)")
             return
         }
         
-        guard !bodyString.isEmpty else {
+        guard !contentString.isEmpty else {
             print("File \(logFilePath) is empty")
             return
         }
+        
+//        contentString = "Hello from iPhone!\\n"
 
-        print("body character count: \(bodyString.count)")
+        print("content character count: \(contentString.count)")
+        
+        let jsonString = "{ \"text\": \"\(contentString)\" }"
 
-        guard let bodyData = bodyString.data(using: .utf8) else {
-            print("error converting body string to data")
+        guard let jsonData = jsonString.data(using: .utf8) else {
+            print("error converting JSON string to data")
             return
         }
         
-        print("body data count: \(bodyData.count)")
+        print("JSON data count: \(jsonData.count)")
+        
+        uploadQueue.async {
+            print("uploading...")
+            let urlString = "http://10.112.11.114:5000/upload"
+            let url = URL(string: urlString)!
+            let request = NSMutableURLRequest(url: url)
+            request.httpMethod = "POST"
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = jsonData
+            
+            let task = URLSession.shared.dataTask(with: request as URLRequest) { data, response, error in
+                guard error == nil else {
+                    print("error: \(error!.localizedDescription)")
+                    return
+                }
+                
+                guard let response = response as? HTTPURLResponse else {
+                    print("got bad response")
+                    return
+                }
+                
+                print("response status code \(response.statusCode)")
+            }
+            task.resume()
+        }
     }
     
 }
