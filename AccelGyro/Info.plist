@@ -39,5 +39,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMotionUsageDescription</key>
+	<string>Let me do it!</string>
 </dict>
 </plist>

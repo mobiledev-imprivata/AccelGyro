@@ -17,6 +17,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var deleteButton: UIButton!
     
     var motionManager = CMMotionManager()
+    let pedometer = CMPedometer()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,6 +41,7 @@ class ViewController: UIViewController {
         
         startAccelerometerUpdates()
         startGyroUpdates()
+        startPedometerUpdates()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -56,7 +58,7 @@ class ViewController: UIViewController {
                 Logger.sharedInstance.log("accel data is nil")
                 return
             }
-            Logger.sharedInstance.log("accel: \(data)")
+            Logger.sharedInstance.log("accel: \(data.acceleration.x) \(data.acceleration.y) \(data.acceleration.z)")
         }
     }
     
@@ -70,13 +72,48 @@ class ViewController: UIViewController {
                 Logger.sharedInstance.log("gyro data is nil")
                 return
             }
-            Logger.sharedInstance.log("gyro:  \(data)")
+            Logger.sharedInstance.log("gyro: \(data.rotationRate.x) \(data.rotationRate.y) \(data.rotationRate.z)")
+        }
+    }
+    
+    private func startPedometerUpdates() {
+        guard CMPedometer.isPedometerEventTrackingAvailable() && CMPedometer.isDistanceAvailable() else { return }
+        
+        pedometer.startEventUpdates { event, error in
+            guard error == nil else {
+                Logger.sharedInstance.log("pedometer event error")
+                return
+            }
+            guard let event = event else {
+                Logger.sharedInstance.log("pedometer event is nil")
+                return
+            }
+            var typeString: String
+            switch event.type {
+            case .pause: typeString = "pause"
+            case .resume: typeString = "resume"
+            }
+            Logger.sharedInstance.log("pedom_event: \(typeString)")
+        }
+        
+        pedometer.startUpdates(from: Date()) { data, error in
+            guard error == nil else {
+                Logger.sharedInstance.log("pedometer error")
+                return
+            }
+            guard let data = data else {
+                Logger.sharedInstance.log("pedometer data is nil")
+                return
+            }
+            Logger.sharedInstance.log("pedom: \(data.numberOfSteps) \(data.distance!)")
         }
     }
     
     private func stopUpdates() {
         motionManager.stopAccelerometerUpdates()
         motionManager.stopGyroUpdates()
+        pedometer.stopUpdates()
+        pedometer.stopEventUpdates()
     }
     
     @IBAction func onBackPocket(_ sender: Any) {
