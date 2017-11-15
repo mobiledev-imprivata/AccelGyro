@@ -151,7 +151,7 @@ public final class Logger {
         
         guard let logFilePath = logFilePath else { return }
 
-        var contentString: String
+        let contentString: String
         do {
             contentString = try String(contentsOfFile: logFilePath, encoding: .utf8)
         } catch  let error as NSError {

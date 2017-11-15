@@ -16,7 +16,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var uploadButton: UIButton!
     @IBOutlet weak var deleteButton: UIButton!
     
-    var motionManager = CMMotionManager()
+    let motionManager = CMMotionManager()
     let pedometer = CMPedometer()
     
     override func viewDidLoad() {
@@ -88,7 +88,7 @@ class ViewController: UIViewController {
                 Logger.sharedInstance.log("pedometer event is nil")
                 return
             }
-            var typeString: String
+            let typeString: String
             switch event.type {
             case .pause: typeString = "pause"
             case .resume: typeString = "resume"
