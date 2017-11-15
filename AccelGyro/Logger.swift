@@ -160,8 +160,6 @@ public final class Logger {
             return
         }
         
-//        contentString = "Hello from iPhone!\\n"
-
         print("content character count: \(contentString.count)")
         
         let jsonString = "{ \"text\": \"\(contentString)\" }"
