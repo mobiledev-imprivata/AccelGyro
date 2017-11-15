@@ -16,18 +16,16 @@ public final class Logger {
     
     private var messageBuffer = [String]()
     private let messageBufferMaxSize = 10
+    
+    private var startTime = Date()
 
     private let loggerQueue = DispatchQueue(label: "com.imprivata.log", attributes: [])
     private let uploadQueue = DispatchQueue(label: "com.imprivata.upload", attributes: [])
 
-    private let dateFormatter = DateFormatter()
-
     // singleton
     static let sharedInstance = Logger()
-    
-    private init() {
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-    }
+
+    private init() {}
     
     deinit {
         closeFile()
@@ -36,8 +34,13 @@ public final class Logger {
     
     func log(_ message: String) {
         loggerQueue.async { [unowned self] in
-            let dateString = self.dateFormatter.string(from: Date())
-            let logString = "\(dateString) \(message)"
+            let timeSinceStart: TimeInterval
+            if self.isLogging {
+                timeSinceStart = -self.startTime.timeIntervalSinceNow
+            } else {
+                timeSinceStart = 0
+            }
+            let logString = "\(String(format: "%.3f", timeSinceStart)) \(message)"
             print(logString)
             
             guard self.isLogging else { return }
@@ -57,6 +60,7 @@ public final class Logger {
             if self.logFilePath == nil {
                 self.openFile()
             }
+            self.startTime = Date()
         }
     }
     
