@@ -41,5 +41,9 @@
 	</array>
 	<key>NSMotionUsageDescription</key>
 	<string>Let me do it!</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key><true/>
+    </dict>
 </dict>
 </plist>
