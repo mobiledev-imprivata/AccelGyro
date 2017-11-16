@@ -9,6 +9,8 @@
 import UIKit
 import CoreMotion
 
+enum EventType: String { case accel, gyro, pedom, pedom_event, user  }
+
 class ViewController: UIViewController {
     
     @IBOutlet weak var startButton: UIButton!
@@ -51,28 +53,36 @@ class ViewController: UIViewController {
     private func startAccelerometerUpdates() {
         motionManager.startAccelerometerUpdates(to: OperationQueue.current!) { data, error in
             guard error == nil else {
-                Logger.sharedInstance.log("accel error")
+                Logger.sharedInstance.log(.accel, "error")
                 return
             }
             guard let data = data else {
-                Logger.sharedInstance.log("accel data is nil")
+                Logger.sharedInstance.log(.accel, "data is nil")
                 return
             }
-            Logger.sharedInstance.log("accel: \(data.acceleration.x) \(data.acceleration.y) \(data.acceleration.z)")
+            let format = "%.4f"
+            let x = String(format: format, data.acceleration.x)
+            let y = String(format: format, data.acceleration.x)
+            let z = String(format: format, data.acceleration.x)
+            Logger.sharedInstance.log(.accel, "\(x),\(y),\(z)")
         }
     }
     
     private func startGyroUpdates() {
         motionManager.startGyroUpdates(to: OperationQueue.current!) { data, error in
             guard error == nil else {
-                Logger.sharedInstance.log("gyro error")
+                Logger.sharedInstance.log(.gyro, "error")
                 return
             }
             guard let data = data else {
-                Logger.sharedInstance.log("gyro data is nil")
+                Logger.sharedInstance.log(.gyro, "data is nil")
                 return
             }
-            Logger.sharedInstance.log("gyro: \(data.rotationRate.x) \(data.rotationRate.y) \(data.rotationRate.z)")
+            let format = "%.4f"
+            let x = String(format: format, data.rotationRate.x)
+            let y = String(format: format, data.rotationRate.x)
+            let z = String(format: format, data.rotationRate.x)
+            Logger.sharedInstance.log(.gyro, "\(x),\(y),\(z)")
         }
     }
     
@@ -81,11 +91,11 @@ class ViewController: UIViewController {
         
         pedometer.startEventUpdates { event, error in
             guard error == nil else {
-                Logger.sharedInstance.log("pedometer event error")
+                Logger.sharedInstance.log(.pedom, "event error")
                 return
             }
             guard let event = event else {
-                Logger.sharedInstance.log("pedometer event is nil")
+                Logger.sharedInstance.log(.pedom, "event is nil")
                 return
             }
             let typeString: String
@@ -93,19 +103,19 @@ class ViewController: UIViewController {
             case .pause: typeString = "pause"
             case .resume: typeString = "resume"
             }
-            Logger.sharedInstance.log("pedom_event: \(typeString)")
+            Logger.sharedInstance.log(.pedom_event, typeString)
         }
         
         pedometer.startUpdates(from: Date()) { data, error in
             guard error == nil else {
-                Logger.sharedInstance.log("pedometer error")
+                Logger.sharedInstance.log(.pedom, "error")
                 return
             }
             guard let data = data else {
-                Logger.sharedInstance.log("pedometer data is nil")
+                Logger.sharedInstance.log(.pedom, "data is nil")
                 return
             }
-            Logger.sharedInstance.log("pedom: \(data.numberOfSteps) \(data.distance!)")
+            Logger.sharedInstance.log(.pedom, "\(data.numberOfSteps),\(String(format: "%.4f",data.distance!.doubleValue))")
         }
     }
     
@@ -117,21 +127,28 @@ class ViewController: UIViewController {
     }
     
     @IBAction func onBackPocket(_ sender: Any) {
-        Logger.sharedInstance.log("*** putting in back pocket ***")
+        Logger.sharedInstance.log(.user, "*** putting in back pocket ***")
     }
     
     @IBAction func onTurnAway(_ sender: Any) {
-        Logger.sharedInstance.log("*** turning away ***")
+        Logger.sharedInstance.log(.user, "*** turning away ***")
     }
     
     @IBAction func onWalkAway(_ sender: Any) {
-        Logger.sharedInstance.log("*** walking away ***")
+        Logger.sharedInstance.log(.user, "*** walking away ***")
     }
     
     // MARK: log file interaction
     
     @IBAction func startLog(_ sender: Any) {
-        Logger.sharedInstance.start()
+        let headers: [EventType:String] = [
+            .accel : "time,x,y,z",
+            .gyro : "time,x,y,z",
+            .pedom : "time,steps,distance",
+            .pedom_event : "time,type",
+        ]
+        
+        Logger.sharedInstance.start(headers: headers)
         
         startButton.isEnabled = false
         stopButton.isEnabled = true

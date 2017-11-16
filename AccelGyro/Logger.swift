@@ -18,13 +18,13 @@ public final class Logger {
     private let messageBufferMaxSize = 10
     
     private var startTime = Date()
-
+    
     private let loggerQueue = DispatchQueue(label: "com.imprivata.log", attributes: [])
     private let uploadQueue = DispatchQueue(label: "com.imprivata.upload", attributes: [])
-
+    
     // singleton
     static let sharedInstance = Logger()
-
+    
     private init() {}
     
     deinit {
@@ -32,7 +32,7 @@ public final class Logger {
         deleteFile()
     }
     
-    func log(_ message: String) {
+    func log(_ eventType: EventType, _ message: String) {
         loggerQueue.async { [unowned self] in
             let timeSinceStart: TimeInterval
             if self.isLogging {
@@ -40,7 +40,7 @@ public final class Logger {
             } else {
                 timeSinceStart = 0
             }
-            let logString = "\(String(format: "%.3f", timeSinceStart)) \(message)"
+            let logString = "\(eventType):\(String(format: "%.3f", timeSinceStart)):\(message)"
             print(logString)
             
             guard self.isLogging else { return }
@@ -53,21 +53,30 @@ public final class Logger {
         }
     }
     
-    func start() {
+    func start(headers: [EventType:String]) {
         print(#function)
         loggerQueue.async { [unowned self] in
-            self.isLogging = true
-            if self.logFilePath == nil {
-                self.openFile()
+            if self.logFilePath != nil {
+                self.closeFile()
+                self.deleteFile()
+                self.messageBuffer.removeAll(keepingCapacity: true)
             }
+            self.openFile()
+            self.writeHeadersToFile(headers)
             self.startTime = Date()
+            self.isLogging = true
         }
     }
     
     func stop() {
         print(#function)
         loggerQueue.async { [unowned self] in
+            // flush any remaining messages in the message buffer,
+            // then close the file
             self.isLogging = false
+            self.writeBufferToFile()
+            self.closeFile()
+            self.messageBuffer.removeAll(keepingCapacity: true)
         }
     }
     
@@ -76,24 +85,29 @@ public final class Logger {
         loggerQueue.async { [unowned self] in
             guard self.logFilePath != nil else { return }
             
+            // if we're still logging,
             // flush any remaining messages in the message buffer,
             // then close the file
+            if self.isLogging {
+                self.writeBufferToFile()
+                self.closeFile()
+            }
             self.isLogging = false
-            self.writeBufferToFile()
-            self.closeFile()
             self.uploadFileToServer()
             self.deleteFile()
+            self.messageBuffer.removeAll(keepingCapacity: true)
         }
     }
-
+    
     func delete() {
         print(#function)
         loggerQueue.async { [unowned self] in
+            self.closeFile()
             self.deleteFile()
-            self.messageBuffer.removeAll()
+            self.messageBuffer.removeAll(keepingCapacity: true)
         }
     }
-
+    
     // MARK: OutputStream/file code
     
     private func openFile() {
@@ -130,6 +144,21 @@ public final class Logger {
         self.logFilePath = nil
     }
     
+    private func writeHeadersToFile(_ headers: [EventType:String]) {
+        print(#function)
+        if let outputStream = outputStream {
+            for (eventType, fields) in headers {
+                let s = "\(eventType):header:\(fields)\\n"
+                let nBytesWritten = outputStream.write(s, maxLength: s.lengthOfBytes(using: String.Encoding.utf8))
+                if nBytesWritten == -1 {
+                    print("error writing log file")
+                }
+            }
+        } else {
+            print("cannot open log file")
+        }
+    }
+    
     private func writeBufferToFile() {
         print(#function)
         if let outputStream = outputStream {
@@ -137,7 +166,6 @@ public final class Logger {
             let nBytesWritten = outputStream.write(s, maxLength: s.lengthOfBytes(using: String.Encoding.utf8))
             if nBytesWritten != -1 {
                 messageBuffer.removeAll(keepingCapacity: true)
-                // rollover()
             } else {
                 print("error writing log file")
             }
@@ -150,7 +178,7 @@ public final class Logger {
         print(#function)
         
         guard let logFilePath = logFilePath else { return }
-
+        
         let contentString: String
         do {
             contentString = try String(contentsOfFile: logFilePath, encoding: .utf8)
@@ -165,9 +193,9 @@ public final class Logger {
         }
         
         print("content character count: \(contentString.count)")
-        
-        let jsonString = "{ \"text\": \"\(contentString)\" }"
 
+        let jsonString = "{ \"text\": \"\(contentString)\" }"
+        
         guard let jsonData = jsonString.data(using: .utf8) else {
             print("error converting JSON string to data")
             return
@@ -177,7 +205,8 @@ public final class Logger {
         
         uploadQueue.async {
             print("uploading...")
-            let urlString = "http://10.112.11.114:5000/upload"
+            // let urlString = "http://10.112.11.114:5000/upload"
+            let urlString = "http://ec2-34-239-22-20.compute-1.amazonaws.com:5000/upload"
             let url = URL(string: urlString)!
             let request = NSMutableURLRequest(url: url)
             request.httpMethod = "POST"
