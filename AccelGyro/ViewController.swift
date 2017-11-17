@@ -62,8 +62,8 @@ class ViewController: UIViewController {
             }
             let format = "%.4f"
             let x = String(format: format, data.acceleration.x)
-            let y = String(format: format, data.acceleration.x)
-            let z = String(format: format, data.acceleration.x)
+            let y = String(format: format, data.acceleration.y)
+            let z = String(format: format, data.acceleration.z)
             Logger.sharedInstance.log(.accel, "\(x),\(y),\(z)")
         }
     }
@@ -80,8 +80,8 @@ class ViewController: UIViewController {
             }
             let format = "%.4f"
             let x = String(format: format, data.rotationRate.x)
-            let y = String(format: format, data.rotationRate.x)
-            let z = String(format: format, data.rotationRate.x)
+            let y = String(format: format, data.rotationRate.y)
+            let z = String(format: format, data.rotationRate.z)
             Logger.sharedInstance.log(.gyro, "\(x),\(y),\(z)")
         }
     }
