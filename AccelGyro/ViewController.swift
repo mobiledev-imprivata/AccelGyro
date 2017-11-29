@@ -23,6 +23,8 @@ class ViewController: UIViewController {
     
     private var uiBackgroundTaskIdentifier: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
     
+    private var bluetoothManager: BluetoothManager!
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -42,6 +44,8 @@ class ViewController: UIViewController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name: .UIApplicationDidBecomeActive, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willResignActive), name: .UIApplicationWillResignActive, object: nil)
+        
+        bluetoothManager = BluetoothManager()
     }
     
     override func didReceiveMemoryWarning() {
