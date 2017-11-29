@@ -64,8 +64,8 @@ class ViewController: UIViewController {
     private func startUpdates() {
         print(#function)
         
-        startAccelerometerUpdates()
-        startGyroUpdates()
+        // startAccelerometerUpdates()
+        // startGyroUpdates()
         startPedometerUpdates()
         startPedometerEventUpdates()
     }
@@ -118,7 +118,7 @@ class ViewController: UIViewController {
     private func startPedometerUpdates() {
         guard CMPedometer.isDistanceAvailable() else { return }
         
-        pedometer.startUpdates(from: Date()) { data, error in
+        pedometer.startUpdates(from: Date()) { [unowned self] data, error in
             guard error == nil else {
                 Logger.sharedInstance.log(.pedom, "error")
                 return
@@ -128,6 +128,7 @@ class ViewController: UIViewController {
                 return
             }
             Logger.sharedInstance.log(.pedom, "\(data.numberOfSteps),\(String(format: "%.4f",data.distance!.doubleValue))")
+            self.bluetoothManager.sendMotionData("\(data.numberOfSteps)")
         }
     }
     

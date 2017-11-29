@@ -15,6 +15,7 @@ final class BluetoothManager: NSObject {
     private let characteristicUUID = CBUUID(string: "2031019E-0380-4F27-8B12-E572858FE928")
     
     private var peripheralManager: CBPeripheralManager!
+    private var characteristic: CBMutableCharacteristic!
     
     private var dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -32,12 +33,18 @@ final class BluetoothManager: NSObject {
         peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
     }
     
+    func sendMotionData(_ dataString: String) {
+        btmgrlog("sendMotionData \(dataString)")
+        guard let value = dataString.data(using: .utf8, allowLossyConversion: false) else { return }
+        peripheralManager.updateValue(value, for: characteristic, onSubscribedCentrals: nil)
+    }
+    
     private func addService() {
         btmgrlog("addService")
         peripheralManager.stopAdvertising()
         peripheralManager.removeAllServices()
         let service = CBMutableService(type: serviceUUID, primary: true)
-        let characteristic = CBMutableCharacteristic(type: characteristicUUID, properties: .notify, value: nil, permissions: .readable)
+        characteristic = CBMutableCharacteristic(type: characteristicUUID, properties: .notify, value: nil, permissions: .readable)
         service.characteristics = [characteristic]
         peripheralManager.add(service)
     }
