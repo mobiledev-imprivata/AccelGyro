@@ -18,10 +18,18 @@ class ViewController: UIViewController {
     @IBOutlet weak var uploadButton: UIButton!
     @IBOutlet weak var deleteButton: UIButton!
     
-    let motionManager = CMMotionManager()
-    let pedometer = CMPedometer()
+    private let motionManager = CMMotionManager()
+    private let pedometer = CMPedometer()
+    
+    private var uiBackgroundTaskIdentifier: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
     
     override func viewDidLoad() {
+        print(#function)
+
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
@@ -29,8 +37,11 @@ class ViewController: UIViewController {
         uploadButton.isEnabled = false
         deleteButton.isEnabled = false
         
-        motionManager.accelerometerUpdateInterval = 1.0
-        motionManager.gyroUpdateInterval = 1.0
+        motionManager.accelerometerUpdateInterval = 0.1
+        motionManager.gyroUpdateInterval = 0.1
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name: .UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(willResignActive), name: .UIApplicationWillResignActive, object: nil)
     }
     
     override func didReceiveMemoryWarning() {
@@ -38,16 +49,30 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    @objc func didBecomeActive() {
+        print(#function)
+    }
+    
+    @objc func willResignActive() {
+        print(#function)
+    }
+    
+    private func startUpdates() {
+        print(#function)
         
         startAccelerometerUpdates()
         startGyroUpdates()
         startPedometerUpdates()
+        startPedometerEventUpdates()
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        stopUpdates()
+    private func stopUpdates() {
+        print(#function)
+
+        motionManager.stopAccelerometerUpdates()
+        motionManager.stopGyroUpdates()
+        pedometer.stopUpdates()
+        pedometer.stopEventUpdates()
     }
     
     private func startAccelerometerUpdates() {
@@ -87,24 +112,7 @@ class ViewController: UIViewController {
     }
     
     private func startPedometerUpdates() {
-        guard CMPedometer.isPedometerEventTrackingAvailable() && CMPedometer.isDistanceAvailable() else { return }
-        
-        pedometer.startEventUpdates { event, error in
-            guard error == nil else {
-                Logger.sharedInstance.log(.pedom, "event error")
-                return
-            }
-            guard let event = event else {
-                Logger.sharedInstance.log(.pedom, "event is nil")
-                return
-            }
-            let typeString: String
-            switch event.type {
-            case .pause: typeString = "pause"
-            case .resume: typeString = "resume"
-            }
-            Logger.sharedInstance.log(.pedom_event, typeString)
-        }
+        guard CMPedometer.isDistanceAvailable() else { return }
         
         pedometer.startUpdates(from: Date()) { data, error in
             guard error == nil else {
@@ -119,11 +127,25 @@ class ViewController: UIViewController {
         }
     }
     
-    private func stopUpdates() {
-        motionManager.stopAccelerometerUpdates()
-        motionManager.stopGyroUpdates()
-        pedometer.stopUpdates()
-        pedometer.stopEventUpdates()
+    private func startPedometerEventUpdates() {
+        guard CMPedometer.isPedometerEventTrackingAvailable() else { return }
+        
+        pedometer.startEventUpdates { event, error in
+            guard error == nil else {
+                Logger.sharedInstance.log(.pedom_event, "event error")
+                return
+            }
+            guard let event = event else {
+                Logger.sharedInstance.log(.pedom_event, "event is nil")
+                return
+            }
+            let typeString: String
+            switch event.type {
+            case .pause: typeString = "pause"
+            case .resume: typeString = "resume"
+            }
+            Logger.sharedInstance.log(.pedom_event, typeString)
+        }
     }
     
     @IBAction func onBackPocket(_ sender: Any) {
@@ -140,6 +162,9 @@ class ViewController: UIViewController {
     
     // MARK: log file interaction
     
+    // We assume that all of these @IBAction methods will be called only when the app is in the foreground,
+    // so we don't have to be overly concerned about when to call endBackgroundTask().
+    
     @IBAction func startLog(_ sender: Any) {
         let headers: [EventType:String] = [
             .accel : "time,x,y,z",
@@ -148,37 +173,73 @@ class ViewController: UIViewController {
             .pedom_event : "time,type",
         ]
         
+        beginBackgroundTask()
+        
         Logger.sharedInstance.start(headers: headers)
         
         startButton.isEnabled = false
         stopButton.isEnabled = true
         uploadButton.isEnabled = true
         deleteButton.isEnabled = true
+        
+        startUpdates()
     }
     
     @IBAction func stopLog(_ sender: Any) {
+        stopUpdates()
+        
         Logger.sharedInstance.stop()
         
         startButton.isEnabled = true
         stopButton.isEnabled = false
+
+        endBackgroundTask()
     }
     
     @IBAction func uploadLog(_ sender: Any) {
+        stopUpdates()
+        
         Logger.sharedInstance.upload()
         
         startButton.isEnabled = true
         stopButton.isEnabled = false
         uploadButton.isEnabled = false
         deleteButton.isEnabled = false
+        
+        endBackgroundTask()
     }
     
     @IBAction func deleteLog(_ sender: Any) {
+        stopUpdates()
+        
         Logger.sharedInstance.delete()
         
         startButton.isEnabled = true
         stopButton.isEnabled = false
         uploadButton.isEnabled = false
         deleteButton.isEnabled = false
+        
+        endBackgroundTask()
+    }
+    
+    // MARK: background task
+    
+    private func beginBackgroundTask() {
+        print(#function)
+        uiBackgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+            [unowned self] in
+            print("uiBackgroundTaskIdentifier \(self.uiBackgroundTaskIdentifier) expired")
+            UIApplication.shared.endBackgroundTask(self.uiBackgroundTaskIdentifier)
+            self.uiBackgroundTaskIdentifier = UIBackgroundTaskInvalid
+        })
+        print("uiBackgroundTaskIdentifier \(uiBackgroundTaskIdentifier)")
+    }
+    
+    private func endBackgroundTask() {
+        print(#function)
+        print("uiBackgroundTaskIdentifier \(uiBackgroundTaskIdentifier)")
+        UIApplication.shared.endBackgroundTask(uiBackgroundTaskIdentifier)
+        uiBackgroundTaskIdentifier = UIBackgroundTaskInvalid
     }
     
 }
