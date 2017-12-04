@@ -46,6 +46,7 @@ class ViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(willResignActive), name: .UIApplicationWillResignActive, object: nil)
         
         bluetoothManager = BluetoothManager()
+        bluetoothManager.delegate = self
     }
     
     override func didReceiveMemoryWarning() {
@@ -128,7 +129,7 @@ class ViewController: UIViewController {
                 return
             }
             Logger.sharedInstance.log(.pedom, "\(data.numberOfSteps),\(String(format: "%.4f",data.distance!.doubleValue))")
-            self.bluetoothManager.sendMotionData("\(data.numberOfSteps)")
+            self.bluetoothManager.updateMotionData("\(data.numberOfSteps)")
         }
     }
     
@@ -248,4 +249,24 @@ class ViewController: UIViewController {
     }
     
 }
+
+extension ViewController: BluetoothManagerDelegate {
+    
+    func readMotionData(completion: @escaping (String) -> Void) {
+        pedometer.queryPedometerData(from: Logger.sharedInstance.startTime, to: Date()) { data, error in
+            guard error == nil else {
+                Logger.sharedInstance.log(.pedom, "error")
+                return
+            }
+            guard let data = data else {
+                Logger.sharedInstance.log(.pedom, "data is nil")
+                return
+            }
+            completion("\(data.numberOfSteps)")
+        }
+    }
+    
+}
+
+
 

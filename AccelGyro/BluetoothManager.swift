@@ -9,14 +9,21 @@
 import Foundation
 import CoreBluetooth
 
+protocol BluetoothManagerDelegate {
+    func readMotionData(completion: @escaping (String) -> Void)
+}
+
 final class BluetoothManager: NSObject {
     
-    private let serviceUUID        = CBUUID(string: "16884184-C1C4-4BD1-A8F1-6ADCB272B18B")
-    private let characteristicUUID = CBUUID(string: "2031019E-0380-4F27-8B12-E572858FE928")
-    
+    private let serviceUUID                  = CBUUID(string: "16884184-C1C4-4BD1-A8F1-6ADCB272B18B")
+    private let readCharacteristicUUID       = CBUUID(string: "0246FAC2-1145-409B-88C4-F43D4E05A8C5")
+    private let subscribedCharacteristicUUID = CBUUID(string: "2031019E-0380-4F27-8B12-E572858FE928")
+
     private var peripheralManager: CBPeripheralManager!
-    private var characteristic: CBMutableCharacteristic!
+    private var subscribedCharacteristic: CBMutableCharacteristic!
     
+    var delegate:BluetoothManagerDelegate?
+
     private var dateFormatter: DateFormatter = {
         let df = DateFormatter()
         df.dateFormat = "YYYY-MM-dd HH:mm:ss.SSS"
@@ -32,11 +39,11 @@ final class BluetoothManager: NSObject {
         super.init()
         peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
     }
-    
-    func sendMotionData(_ dataString: String) {
+
+    func updateMotionData(_ dataString: String) {
         btmgrlog("sendMotionData \(dataString)")
         guard let value = dataString.data(using: .utf8, allowLossyConversion: false) else { return }
-        peripheralManager.updateValue(value, for: characteristic, onSubscribedCentrals: nil)
+        peripheralManager.updateValue(value, for: subscribedCharacteristic, onSubscribedCentrals: nil)
     }
     
     private func addService() {
@@ -44,8 +51,9 @@ final class BluetoothManager: NSObject {
         peripheralManager.stopAdvertising()
         peripheralManager.removeAllServices()
         let service = CBMutableService(type: serviceUUID, primary: true)
-        characteristic = CBMutableCharacteristic(type: characteristicUUID, properties: .notify, value: nil, permissions: .readable)
-        service.characteristics = [characteristic]
+        let readCharacteristic = CBMutableCharacteristic(type: readCharacteristicUUID, properties: .read, value: nil, permissions: .readable)
+        subscribedCharacteristic = CBMutableCharacteristic(type: subscribedCharacteristicUUID, properties: .notify, value: nil, permissions: .readable)
+        service.characteristics = [readCharacteristic, subscribedCharacteristic]
         peripheralManager.add(service)
     }
     
@@ -103,9 +111,11 @@ extension BluetoothManager: CBPeripheralManagerDelegate {
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
         btmgrlog("peripheralManager didReceiveRead request")
-        let response = "Polo!"
-        request.value = response.data(using: String.Encoding.utf8, allowLossyConversion: false)
-        peripheralManager.respond(to: request, withResult: .success)
+        delegate?.readMotionData { dataString in
+            self.btmgrlog("data: \(dataString)")
+            request.value = dataString.data(using: .utf8, allowLossyConversion: false)
+            self.peripheralManager.respond(to: request, withResult: .success)
+        }
     }
     
 }

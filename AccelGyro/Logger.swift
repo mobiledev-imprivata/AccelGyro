@@ -17,7 +17,7 @@ public final class Logger {
     private var messageBuffer = [String]()
     private let messageBufferMaxSize = 10
     
-    private var startTime = Date()
+    var startTime = Date()
     
     private let loggerQueue = DispatchQueue(label: "com.imprivata.log", attributes: [])
     private let uploadQueue = DispatchQueue(label: "com.imprivata.upload", attributes: [])
