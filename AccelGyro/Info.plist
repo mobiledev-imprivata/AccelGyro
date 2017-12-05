@@ -27,8 +27,11 @@
 	</dict>
 	<key>NSMotionUsageDescription</key>
 	<string>Let me do it!</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Let me do it!</string>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>bluetooth-peripheral</string>
 		<string>location</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

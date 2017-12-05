@@ -205,7 +205,7 @@ public final class Logger {
         
         uploadQueue.async {
             print("uploading...")
-            // let urlString = "http://10.112.11.114:5000/upload"
+            // let urlString = "http://10.18.0.217:5000/upload" // ifconfig | grep inet
             let urlString = "http://ec2-34-239-22-20.compute-1.amazonaws.com:5000/upload"
             let url = URL(string: urlString)!
             let request = NSMutableURLRequest(url: url)
