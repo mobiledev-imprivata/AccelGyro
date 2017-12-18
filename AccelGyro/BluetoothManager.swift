@@ -10,19 +10,20 @@ import Foundation
 import CoreBluetooth
 
 protocol BluetoothManagerDelegate {
-    func readMotionData(completion: @escaping (String) -> Void)
+    func readMotionData(interval: TimeInterval, completion: @escaping (String) -> Void)
 }
 
 final class BluetoothManager: NSObject {
     
-    private let serviceUUID                  = CBUUID(string: "16884184-C1C4-4BD1-A8F1-6ADCB272B18B")
-    private let readCharacteristicUUID       = CBUUID(string: "0246FAC2-1145-409B-88C4-F43D4E05A8C5")
-    private let subscribedCharacteristicUUID = CBUUID(string: "2031019E-0380-4F27-8B12-E572858FE928")
+    private let serviceUUID                     = CBUUID(string: "16884184-C1C4-4BD1-A8F1-6ADCB272B18B")
+    private let setIntervalCharacteristicUUID   = CBUUID(string: "81426A40-F761-4F45-A58B-D27A780AAEF9")
+    private let getMotionDataCharacteristicUUID = CBUUID(string: "0246FAC2-1145-409B-88C4-F43D4E05A8C5")
 
     private var peripheralManager: CBPeripheralManager!
-    private var subscribedCharacteristic: CBMutableCharacteristic!
     
     var delegate:BluetoothManagerDelegate?
+    
+    var interval: TimeInterval = 10.0
 
     private var dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -40,20 +41,14 @@ final class BluetoothManager: NSObject {
         peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
     }
 
-    func updateMotionData(_ dataString: String) {
-        btmgrlog("sendMotionData \(dataString)")
-        guard let value = dataString.data(using: .utf8, allowLossyConversion: false) else { return }
-        peripheralManager.updateValue(value, for: subscribedCharacteristic, onSubscribedCentrals: nil)
-    }
-    
     private func addService() {
         btmgrlog("addService")
         peripheralManager.stopAdvertising()
         peripheralManager.removeAllServices()
         let service = CBMutableService(type: serviceUUID, primary: true)
-        let readCharacteristic = CBMutableCharacteristic(type: readCharacteristicUUID, properties: .read, value: nil, permissions: .readable)
-        subscribedCharacteristic = CBMutableCharacteristic(type: subscribedCharacteristicUUID, properties: .notify, value: nil, permissions: .readable)
-        service.characteristics = [readCharacteristic, subscribedCharacteristic]
+        let setIntervalCharacteristic = CBMutableCharacteristic(type: setIntervalCharacteristicUUID, properties: .write, value: nil, permissions: .writeable)
+        let getMotionDataCharacteristic = CBMutableCharacteristic(type: getMotionDataCharacteristicUUID, properties: .read, value: nil, permissions: .readable)
+        service.characteristics = [setIntervalCharacteristic, getMotionDataCharacteristic]
         peripheralManager.add(service)
     }
     
@@ -100,18 +95,29 @@ extension BluetoothManager: CBPeripheralManagerDelegate {
         let message = "peripheralManagerDidStartAdvertising " + (error == nil ? "ok" :  ("error " + error!.localizedDescription))
         btmgrlog(message)
     }
-    
-    func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didSubscribeTo characteristic: CBCharacteristic) {
-        btmgrlog("peripheralManager didSubscribeTo characteristic")
-    }
-    
-    func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didUnsubscribeFrom characteristic: CBCharacteristic) {
-        btmgrlog("peripheralManager didUnsubscribeFrom characteristic")
+
+    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+        btmgrlog("didReceiveWriteRequests \(requests.count)")
+        for request in requests {
+            // let characteristic = request.characteristic
+            guard let value = request.value else {
+                btmgrlog("request.value is nil")
+                return
+            }
+            btmgrlog("received \(value.count) bytes:\(value.reduce("") { $0 + String(format: " %02x", $1) })")
+            guard let intervalString = String(data: value, encoding: .utf8), let interval = TimeInterval(intervalString) else {
+                btmgrlog("couldn't parse interval")
+                return
+            }
+            btmgrlog("setting interval to \(interval)")
+            self.interval = interval
+            peripheralManager.respond(to: request, withResult: .success)
+        }
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
-        btmgrlog("peripheralManager didReceiveRead request")
-        delegate?.readMotionData { dataString in
+        btmgrlog("peripheralManager didReceiveRead request \(request.characteristic.uuid.uuidString)")
+        delegate?.readMotionData(interval: interval) { dataString in
             self.btmgrlog("data: \(dataString)")
             request.value = dataString.data(using: .utf8, allowLossyConversion: false)
             self.peripheralManager.respond(to: request, withResult: .success)

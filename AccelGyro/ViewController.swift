@@ -18,7 +18,6 @@ class ViewController: UIViewController {
     @IBOutlet weak var uploadButton: UIButton!
     @IBOutlet weak var deleteButton: UIButton!
     
-    private let motionManager = CMMotionManager()
     private let pedometer = CMPedometer()
     
     private var uiBackgroundTaskIdentifier: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
@@ -38,9 +37,6 @@ class ViewController: UIViewController {
         stopButton.isEnabled = false
         uploadButton.isEnabled = false
         deleteButton.isEnabled = false
-        
-        motionManager.accelerometerUpdateInterval = 0.1
-        motionManager.gyroUpdateInterval = 0.1
         
         NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name: .UIApplicationDidBecomeActive, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willResignActive), name: .UIApplicationWillResignActive, object: nil)
@@ -64,9 +60,6 @@ class ViewController: UIViewController {
     
     private func startUpdates() {
         print(#function)
-        
-        // startAccelerometerUpdates()
-        // startGyroUpdates()
         startPedometerUpdates()
         startPedometerEventUpdates()
     }
@@ -74,52 +67,14 @@ class ViewController: UIViewController {
     private func stopUpdates() {
         print(#function)
 
-        motionManager.stopAccelerometerUpdates()
-        motionManager.stopGyroUpdates()
         pedometer.stopUpdates()
         pedometer.stopEventUpdates()
-    }
-    
-    private func startAccelerometerUpdates() {
-        motionManager.startAccelerometerUpdates(to: OperationQueue.current!) { data, error in
-            guard error == nil else {
-                Logger.sharedInstance.log(.accel, "error")
-                return
-            }
-            guard let data = data else {
-                Logger.sharedInstance.log(.accel, "data is nil")
-                return
-            }
-            let format = "%.4f"
-            let x = String(format: format, data.acceleration.x)
-            let y = String(format: format, data.acceleration.y)
-            let z = String(format: format, data.acceleration.z)
-            Logger.sharedInstance.log(.accel, "\(x),\(y),\(z)")
-        }
-    }
-    
-    private func startGyroUpdates() {
-        motionManager.startGyroUpdates(to: OperationQueue.current!) { data, error in
-            guard error == nil else {
-                Logger.sharedInstance.log(.gyro, "error")
-                return
-            }
-            guard let data = data else {
-                Logger.sharedInstance.log(.gyro, "data is nil")
-                return
-            }
-            let format = "%.4f"
-            let x = String(format: format, data.rotationRate.x)
-            let y = String(format: format, data.rotationRate.y)
-            let z = String(format: format, data.rotationRate.z)
-            Logger.sharedInstance.log(.gyro, "\(x),\(y),\(z)")
-        }
     }
     
     private func startPedometerUpdates() {
         guard CMPedometer.isDistanceAvailable() else { return }
         
-        pedometer.startUpdates(from: Date()) { [unowned self] data, error in
+        pedometer.startUpdates(from: Date()) { data, error in
             guard error == nil else {
                 Logger.sharedInstance.log(.pedom, "error")
                 return
@@ -129,7 +84,6 @@ class ViewController: UIViewController {
                 return
             }
             Logger.sharedInstance.log(.pedom, "\(data.numberOfSteps),\(String(format: "%.4f",data.distance!.doubleValue))")
-            self.bluetoothManager.updateMotionData("\(data.numberOfSteps)")
         }
     }
     
@@ -173,8 +127,6 @@ class ViewController: UIViewController {
     
     @IBAction func startLog(_ sender: Any) {
         let headers: [EventType:String] = [
-            .accel : "time,x,y,z",
-            .gyro : "time,x,y,z",
             .pedom : "time,steps,distance",
             .pedom_event : "time,type",
         ]
@@ -229,7 +181,7 @@ class ViewController: UIViewController {
     }
     
     // MARK: background task
-    
+
     private func beginBackgroundTask() {
         print(#function)
         uiBackgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: {
@@ -252,8 +204,10 @@ class ViewController: UIViewController {
 
 extension ViewController: BluetoothManagerDelegate {
     
-    func readMotionData(completion: @escaping (String) -> Void) {
-        pedometer.queryPedometerData(from: Logger.sharedInstance.startTime, to: Date()) { data, error in
+    func readMotionData(interval: TimeInterval, completion: @escaping (String) -> Void) {
+        // completion("1234")
+        let now = Date()
+        pedometer.queryPedometerData(from: now - interval, to: now) { data, error in
             guard error == nil else {
                 Logger.sharedInstance.log(.pedom, "error")
                 return
